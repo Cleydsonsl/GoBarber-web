@@ -10,13 +10,13 @@ export default createGlobalStyle`
 
   body {
     background: #312E38;
-    color: #f4ede8;
-    -webkit-font-smoothing: antialiased;
+    color: #fff;
+    -webkit-font-smoothing: antialiased
   }
 
   body, input, button {
-    font-family: 'Roboto Slab', serif;
-    font-size: 16px;
+    font-family:"Roboto Slab", serif;
+    font-size:  16px;
   }
 
   h1, h2, h3, h4, h5, h6, strong {
@@ -26,13 +26,4 @@ export default createGlobalStyle`
   button {
     cursor: pointer;
   }
-
-  /* input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus,
-  input:-webkit-autofill:active  {
-    box-shadow: 0 0 0px 1000px #232129 inset;
-    transition: "color 9999s ease-out, background-color 9999s ease-out";
-    transition-delay: 9999s;
-  } */
 `;

@@ -1,18 +1,29 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { isToday, format, parseISO, isAfter } from 'date-fns';
-import ptBR from 'date-fns/locale/pt-BR';
+import ptBr from 'date-fns/locale/pt-BR';
 import DayPicker, { DayModifiers } from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
 
 import { FiPower, FiClock } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import * as S from './styles';
+import {
+  Container,
+  Header,
+  HeaderContainer,
+  Profile,
+  Content,
+  Schedule,
+  NexAppointment,
+  Section,
+  Appointment,
+  Calendar,
+} from './styles';
 
-import logoImg from '../../assets/logo.svg';
+import logo from '../../assets/logo.svg';
 import { useAuth } from '../../hooks/auth';
 import api from '../../services/api';
 
-interface MonthAvailabilityItem {
+interface MonthAvailability {
   day: number;
   available: boolean;
 }
@@ -33,14 +44,12 @@ const Dashboard: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [monthAvailability, setMonthAvailability] = useState<
-    MonthAvailabilityItem[]
+    MonthAvailability[]
   >([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const handleDateChange = useCallback((day: Date, modifiers: DayModifiers) => {
-    if (modifiers.available && !modifiers.disabled) {
-      setSelectedDate(day);
-    }
+    if (modifiers.available && !modifiers.disabled) setSelectedDate(day);
   }, []);
 
   const handleMonthChange = useCallback((month: Date) => {
@@ -49,36 +58,37 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     api
-      .get(`/providers/${user.id}/month-availability`, {
+      .get(`providers/${user.id}/month-availability`, {
         params: {
           year: currentMonth.getFullYear(),
           month: currentMonth.getMonth() + 1,
         },
       })
-      .then(response => setMonthAvailability(response.data));
+      .then(({ data }) => setMonthAvailability(data));
   }, [currentMonth, user.id]);
 
   useEffect(() => {
     api
-      .get<Appointment[]>('/appointments/me', {
+      .get<Appointment[]>('appointments/me', {
         params: {
           year: selectedDate.getFullYear(),
           month: selectedDate.getMonth() + 1,
           day: selectedDate.getDate(),
         },
       })
-      .then(response => {
-        const appointmentsFormatted = response.data.map(appointment => ({
-          ...appointment,
-          hourFormatted: format(parseISO(appointment.date), 'HH:mm'),
-        }));
-
+      .then(({ data }) => {
+        const appointmentsFormatted = data.map(appointment => {
+          return {
+            ...appointment,
+            hourFormatted: format(parseISO(appointment.date), 'HH:mm'),
+          };
+        });
         setAppointments(appointmentsFormatted);
       });
   }, [selectedDate]);
 
-  const disableDays = useMemo(() => {
-    return monthAvailability
+  const disabledDays = useMemo(() => {
+    const dates = monthAvailability
       .filter(monthDay => monthDay.available === false)
       .map(monthDay => {
         const year = currentMonth.getFullYear();
@@ -86,14 +96,20 @@ const Dashboard: React.FC = () => {
 
         return new Date(year, month, monthDay.day);
       });
+
+    return dates;
   }, [currentMonth, monthAvailability]);
 
   const selectedDateAsText = useMemo(() => {
-    return format(selectedDate, "'Dia' dd 'de' MMMM", { locale: ptBR });
+    return format(selectedDate, "'Dia' dd 'de' MMMM", {
+      locale: ptBr,
+    });
   }, [selectedDate]);
 
   const selectedWeekDay = useMemo(() => {
-    return format(selectedDate, 'cccc', { locale: ptBR });
+    return format(selectedDate, 'cccc', {
+      locale: ptBr,
+    });
   }, [selectedDate]);
 
   const morningAppointments = useMemo(() => {
@@ -109,71 +125,61 @@ const Dashboard: React.FC = () => {
   }, [appointments]);
 
   const nextAppointment = useMemo(() => {
-    return appointments.find(appointment =>
-      isAfter(parseISO(appointment.date), new Date()),
-    );
+    return appointments.find(appointment => {
+      return isAfter(parseISO(appointment.date), new Date());
+    });
   }, [appointments]);
 
   return (
-    <S.Container>
-      <S.Header>
-        <S.HeaderContent>
-          <img src={logoImg} alt="Logo GoBarber" />
+    <Container>
+      <Header>
+        <HeaderContainer>
+          <img src={logo} alt="GoBarber" />
 
-          <S.HeaderProfile>
-            <img
-              src={
-                user.avatar_url ||
-                'https://api.adorable.io/avatars/56/abott@adorable.io.png'
-              }
-              alt={user.name}
-            />
-
+          <Profile>
+            <img src={user.avatar_url} alt={user.name} />
             <div>
               <span>Bem-vindo,</span>
+
               <Link to="/profile">
                 <strong>{user.name}</strong>
               </Link>
             </div>
-          </S.HeaderProfile>
+          </Profile>
 
           <button type="button" onClick={signOut}>
-            <FiPower size={20} />
+            <FiPower />
           </button>
-        </S.HeaderContent>
-      </S.Header>
+        </HeaderContainer>
+      </Header>
 
-      <S.Content>
-        <S.Schedule>
+      <Content>
+        <Schedule>
           <h1>Horários agendados</h1>
           <p>
             {isToday(selectedDate) && <span>Hoje</span>}
             <span>{selectedDateAsText}</span>
-            <span>{`${selectedWeekDay}-feira`}</span>
+            <span>{selectedWeekDay}</span>
           </p>
 
           {isToday(selectedDate) && nextAppointment && (
-            <S.NextAppointment>
-              <strong>Atendimento a seguir</strong>
+            <NexAppointment>
+              <strong>Agendamento a seguir</strong>
               <div>
                 <img
-                  src={
-                    nextAppointment.user.avatar_url ||
-                    'https://api.adorable.io/avatars/80/abott@adorable.io.png'
-                  }
+                  src={nextAppointment.user.avatar_url}
                   alt={nextAppointment.user.name}
                 />
-
                 <strong>{nextAppointment.user.name}</strong>
                 <span>
-                  <FiClock size={24} />
+                  <FiClock />
                   {nextAppointment.hourFormatted}
                 </span>
               </div>
-            </S.NextAppointment>
+            </NexAppointment>
           )}
 
-          <S.Section>
+          <Section>
             <strong>Manhã</strong>
 
             {morningAppointments.length === 0 && (
@@ -181,27 +187,24 @@ const Dashboard: React.FC = () => {
             )}
 
             {morningAppointments.map(appointment => (
-              <S.Appointment key={appointment.id}>
+              <Appointment key={appointment.id}>
                 <span>
-                  <FiClock size={20} />
-                  {appointment.hourFormatted}
+                  <FiClock />
+                  {appointment.date}
                 </span>
 
                 <div>
                   <img
-                    src={
-                      appointment.user.avatar_url ||
-                      'https://api.adorable.io/avatars/56/abott@adorable.io.png'
-                    }
+                    src={appointment.user.avatar_url}
                     alt={appointment.user.name}
                   />
-
                   <strong>{appointment.user.name}</strong>
                 </div>
-              </S.Appointment>
+              </Appointment>
             ))}
-          </S.Section>
-          <S.Section>
+          </Section>
+
+          <Section>
             <strong>Tarde</strong>
 
             {afternoonAppointments.length === 0 && (
@@ -209,32 +212,29 @@ const Dashboard: React.FC = () => {
             )}
 
             {afternoonAppointments.map(appointment => (
-              <S.Appointment key={appointment.id}>
+              <Appointment key={appointment.id}>
                 <span>
-                  <FiClock size={20} />
-                  {appointment.hourFormatted}
+                  <FiClock />
+                  {appointment.date}
                 </span>
 
                 <div>
                   <img
-                    src={
-                      appointment.user.avatar_url ||
-                      'https://api.adorable.io/avatars/56/abott@adorable.io.png'
-                    }
+                    src={appointment.user.avatar_url}
                     alt={appointment.user.name}
                   />
-
                   <strong>{appointment.user.name}</strong>
                 </div>
-              </S.Appointment>
+              </Appointment>
             ))}
-          </S.Section>
-        </S.Schedule>
-        <S.Calendar>
+          </Section>
+        </Schedule>
+
+        <Calendar>
           <DayPicker
             weekdaysShort={['D', 'S', 'T', 'Q', 'Q', 'S', 'S']}
             fromMonth={new Date()}
-            disabledDays={[{ daysOfWeek: [0, 6] }, ...disableDays]}
+            disabledDays={[{ daysOfWeek: [0, 6] }, ...disabledDays]}
             modifiers={{
               available: { daysOfWeek: [1, 2, 3, 4, 5] },
             }}
@@ -256,9 +256,9 @@ const Dashboard: React.FC = () => {
               'Dezembro',
             ]}
           />
-        </S.Calendar>
-      </S.Content>
-    </S.Container>
+        </Calendar>
+      </Content>
+    </Container>
   );
 };
 

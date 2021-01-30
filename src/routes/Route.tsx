@@ -5,7 +5,6 @@ import {
   Redirect,
 } from 'react-router-dom';
 
-// import { Container } from './styles';
 import { useAuth } from '../hooks/auth';
 
 interface RouteProps extends ReactDOMRouteProps {
@@ -19,7 +18,6 @@ const Route: React.FC<RouteProps> = ({
   ...rest
 }) => {
   const { user } = useAuth();
-
   return (
     <ReactDOMRoute
       {...rest}
