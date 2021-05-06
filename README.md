@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img alt="GoBarber" title="#delicinha" src="../.github/gobarber.png" width="250px" />
+    <img alt="GoBarber" title="#delicinha" src="https://user-images.githubusercontent.com/11545976/81596075-d6213000-9399-11ea-97b2-eba1a4108788.png" width="250px" />
 </h1>
 
 <p align="center">
